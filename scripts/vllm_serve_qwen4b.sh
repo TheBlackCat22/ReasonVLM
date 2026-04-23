@@ -9,6 +9,8 @@
 #SBATCH --gres=gpu:a100:2
 #SBATCH --output=logs/vllm_serve_qwen4b_%j.log
 
+echo "$(date '+%Y-%m-%d %H:%M:%S') Job ${SLURM_JOB_ID} started ..."
+
 ml purge
 ml WebProxy
 ml CUDA/12.9.0
@@ -68,12 +70,7 @@ sleep 60
 
 ray status
 
-# # ==========================================
-# # 4. Launch vLLM Server
-# # ==========================================
-# echo "Starting vLLM Server on Head Node..."
-
-# # Backgrounded (&) with --overlap so the script holds the allocation but frees resources
+echo "Starting vLLM Server on Head Node..."
 # srun --overlap --nodes=1 --ntasks=1 -w "$head_node" \
 #     python -m vllm.entrypoints.openai.api_server \
 #     --model "$MODEL_ID" \
@@ -83,5 +80,6 @@ ray status
 #     --port 8000 \
 #     --trust-remote-code &
 
-# # Wait to keep the job running
-# wait
+wait
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') Job ${SLURM_JOB_ID} stopped ..."

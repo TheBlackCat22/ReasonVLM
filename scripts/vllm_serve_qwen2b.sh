@@ -9,6 +9,8 @@
 #SBATCH --gres=gpu:a100:2
 #SBATCH --output=logs/vllm_serve_qwen2b_%j.log
 
+echo "$(date '+%Y-%m-%d %H:%M:%S') Job ${SLURM_JOB_ID} started ..."
+
 ml purge
 ml WebProxy
 ml CUDA/12.9.0
@@ -29,3 +31,5 @@ srun --overlap --nodes=1 --ntasks=1 \
     --max-model-len 262144 &
 
 wait
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') Job ${SLURM_JOB_ID} stopped ..."
