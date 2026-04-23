@@ -25,11 +25,11 @@ NUM_GPUS_PER_NODE=2
 echo "Starting vLLM Server on Head Node..."
 srun --overlap --nodes=1 --ntasks=1 \
     vllm serve "$MODEL_ID" \
+    --served-model-name qwen3.5 \
     --host 0.0.0.0 \
     --port 8000 \
-    --tensor-parallel-size "$TENSOR_PARALLEL_SIZE" \
-    --max-model-len 262144 &
+    --tensor-parallel-size "$NUM_GPUS_PER_NODE" \
+    --max-model-len 262144 \
+    --reasoning-parser qwen3 &
 
 wait
-
-echo "$(date '+%Y-%m-%d %H:%M:%S') Job ${SLURM_JOB_ID} stopped ..."

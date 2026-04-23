@@ -71,15 +71,14 @@ sleep 60
 ray status
 
 echo "Starting vLLM Server on Head Node..."
-# srun --overlap --nodes=1 --ntasks=1 -w "$head_node" \
-#     python -m vllm.entrypoints.openai.api_server \
-#     --model "$MODEL_ID" \
-#     --tensor-parallel-size "$NUM_GPUS_PER_NODE" \
-#     --pipeline-parallel-size "$NUM_NODES" \
-#     --host 0.0.0.0 \
-#     --port 8000 \
-#     --trust-remote-code &
+srun --overlap --nodes=1 --ntasks=1 -w "$head_node" \
+    vllm serve "$MODEL_ID" \
+    --served-model-name qwen3.5 \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --tensor-parallel-size "$NUM_GPUS_PER_NODE" \
+    --pipeline-parallel-size "$NUM_NODES" \
+    --max-model-len 262144 \
+    --reasoning-parser qwen3 &
 
 wait
-
-echo "$(date '+%Y-%m-%d %H:%M:%S') Job ${SLURM_JOB_ID} stopped ..."
