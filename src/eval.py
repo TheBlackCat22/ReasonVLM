@@ -161,9 +161,7 @@ Example of expected JSON response format:
     print("\n\nResults")
     
     overall_acc = df_results['is_correct'].mean()
-    print(f"**Overall Accuracy:** {overall_acc:.2%}")
-    
-    print("\n**Subject-wise Accuracy:**")
+    print(f"  - overall: {overall_acc:.2%}")
     subject_acc = df_results.groupby('subject')['is_correct'].mean()
     for sub, acc in subject_acc.items():
         print(f"  - {sub}: {acc:.2%}")
