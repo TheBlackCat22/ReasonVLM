@@ -1,4 +1,5 @@
 import base64
+import pandas as pd
 from io import BytesIO
 from langchain_core.messages import HumanMessage
 
@@ -49,8 +50,33 @@ class BaselineMethod:
 
 
 class SushilOracleMethod:
+    def __init__(self):
+        self.oracle_data = pd.read_json("src/sushiloracle_data.jsonl", lines=True)
+
     def __call__(self, question_id, question, answer_type, subject, img, llm):
-        pass
+        if answer_type == 'multiple choice':
+            inst = "Provide the corresponding choice option in the 'short answer' key, such as 'A', 'B', 'C', or 'D'."
+        elif answer_type == 'float':
+            inst = "Format the answer as a three-digit floating-point number and provide it in the 'short answer' key."
+        else:
+            inst = "Float numbers in the answer should be formatted as three-digit floating-point numbers."
+
+        plot_code = self.oracle_data.loc[self.oracle_data['question_id'] == int(question_id), 'plot_function'].values[0]
+        plot_code_prompt = f"\n## Plot Code \n```python\n{plot_code}\n```"
+
+        message = HumanMessage(
+            content=[
+                {
+                    "type": "text", 
+                    "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst) + plot_code_prompt
+                },
+                {
+                    "type": "image_url", 
+                    "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
+                }
+            ]
+        )
+        return message
 
 
 class SushilMethod:
