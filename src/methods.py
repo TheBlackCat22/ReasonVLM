@@ -119,7 +119,15 @@ class SushilMethod:
         )
 
         try:
-            response = llm.generate([[message]], n=1)
+            response = llm.generate(
+                [[message]], 
+                n=1,
+                extra_body={
+                    "top_k": 20,
+                    "min_p": 0.0,
+                    "repetition_penalty": 1.0
+                }
+            )
             generation_text = response.generations[0][0].text 
         except Exception as e:
             print(f"\nPlot Generation failed for ID {question_id}: {e}")

@@ -29,7 +29,8 @@ def main(method_name):
         model="qwen3.5",
         base_url="http://127.0.0.1:8000/v1",
         api_key="dummy",
-        max_tokens=2048, 
+        max_tokens=2048,
+        seed=42, 
         temperature=0.7,
         n=4,
         top_p=0.80,
@@ -37,7 +38,16 @@ def main(method_name):
         extra_body={
             "top_k": 20,
             "min_p": 0.0,
-            "repetition_penalty": 1.0
+            "repetition_penalty": 1.0,
+            "guided_json": {
+                "type": "object",
+                "properties": {
+                    "solution": {"type": "string"},
+                    "short answer": {"type": "string"}
+                },
+                "required": ["solution", "short answer"],
+                "additionalProperties": False
+            }
         }
     )
     print(llm)
@@ -71,7 +81,7 @@ def main(method_name):
         message = method(question_id, question, answer_type, subject, img, llm)
 
         try:
-            response = llm.generate([[message]], response_format={"type": "json_object"})
+            response = llm.generate([[message]])
             
             sample_correctness = []
             for generation in response.generations[0]:
