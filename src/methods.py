@@ -2,7 +2,6 @@ import os
 import base64
 import pandas as pd
 from io import BytesIO
-from langchain_core.messages import HumanMessage
 
 from viser_utils import apply_viser_scaffolding, get_viser_prompt
 from scaffold_utils import apply_scaffold_coordinates, get_scaffold_prompt
@@ -27,31 +26,35 @@ Example of expected JSON response format:
 }}
 """
 
+def get_instruction_suffix(answer_type):
+    # Determine instruction suffix
+    if answer_type == 'multiple choice':
+        return "Provide the corresponding choice option in the 'short answer' key, such as 'A', 'B', 'C', or 'D'."
+    elif answer_type == 'float':
+        return "Format the answer as a three-digit floating-point number and provide it in the 'short answer' key."
+    else:
+        return "Float numbers in the answer should be formatted as three-digit floating-point numbers."
+
 
 class BaselineMethod:
     def __call__(self, question_id, question, answer_type, subject, img, llm):
-        # Determine instruction suffix
-        if answer_type == 'multiple choice':
-            inst = "Provide the corresponding choice option in the 'short answer' key, such as 'A', 'B', 'C', or 'D'."
-        elif answer_type == 'float':
-            inst = "Format the answer as a three-digit floating-point number and provide it in the 'short answer' key."
-        else:
-            inst = "Float numbers in the answer should be formatted as three-digit floating-point numbers."
-            
-        # Construct multimodal message
-        message = HumanMessage(
-            content=[
-                {
-                    "type": "text", 
-                    "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst)
-                },
-                {
-                    "type": "image_url", 
-                    "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
-                }
-            ]
-        )
-        return message
+        inst = get_instruction_suffix(answer_type)
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url", 
+                        "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
+                    },
+                    {
+                        "type": "text", 
+                        "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst)
+                    }
+                ]
+            }
+        ]
+        return messages
 
 
 class SushilOracleMethod:
@@ -59,87 +62,105 @@ class SushilOracleMethod:
         self.oracle_data = pd.read_json("src/sushiloracle_data.jsonl", lines=True)
 
     def __call__(self, question_id, question, answer_type, subject, img, llm):
-        if answer_type == 'multiple choice':
-            inst = "Provide the corresponding choice option in the 'short answer' key, such as 'A', 'B', 'C', or 'D'."
-        elif answer_type == 'float':
-            inst = "Format the answer as a three-digit floating-point number and provide it in the 'short answer' key."
-        else:
-            inst = "Float numbers in the answer should be formatted as three-digit floating-point numbers."
+        inst = get_instruction_suffix(answer_type)
 
         plot_code = self.oracle_data.loc[self.oracle_data['question_id'] == int(question_id), 'plot_function'].values[0]
         plot_code_prompt = f"\n## Plot Code \nHere is the python code used to generate the image. \n```python\n{plot_code}\n```"
 
-        message = HumanMessage(
-            content=[
-                {
-                    "type": "text", 
-                    "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst) + plot_code_prompt
-                },
-                {
-                    "type": "image_url", 
-                    "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
-                }
-            ]
-        )
-        return message
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url", 
+                        "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
+                    },
+                    {
+                        "type": "text", 
+                        "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst) + plot_code_prompt
+                    }
+                ]
+            }
+        ]
+        return messages
 
 
 class SushilMethod:
     def __call__(self, question_id, question, answer_type, subject, img, llm):
-        if answer_type == 'multiple choice':
-            inst = "Provide the corresponding choice option in the 'short answer' key, such as 'A', 'B', 'C', or 'D'."
-        elif answer_type == 'float':
-            inst = "Format the answer as a three-digit floating-point number and provide it in the 'short answer' key."
-        else:
-            inst = "Float numbers in the answer should be formatted as three-digit floating-point numbers."
+        inst = get_instruction_suffix(answer_type)
 
-        plot_code = self.generate_plot_code(question_id, img)
+        plot_code = self.generate_plot_code(question_id, img, llm)
         if plot_code != "":
             plot_code_prompt = f"\n## Plot Code \nHere is the python code used to generate the image. \n```python\n{plot_code}\n```"
         else:
             plot_code_prompt = ""
 
-        message = HumanMessage(
-            content=[
-                {
-                    "type": "text", 
-                    "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst) + plot_code_prompt
-                },
-                {
-                    "type": "image_url", 
-                    "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
-                }
-            ]
-        )
-        return message    
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url", 
+                        "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
+                    },
+                    {
+                        "type": "text", 
+                        "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst) + plot_code_prompt
+                    }
+                ]
+            }
+        ]
+        return messages    
 
-    def generate_plot_code(self, question_id, img):
-        message = HumanMessage(
-            content =[
-                {
-                    "type": "text",
-                    "text": "Analyze this image and write a complete Python script using the matplotlib library to recreate it visually. Break the image down into basic shapes, lines, and colors. Output ONLY valid, executable Python code. Do not include any markdown formatting, explanations, or conversational text."
-                },
-                {
-                    "type": "image_url", 
-                    "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
-                }
-            ]
-        )
+    def generate_plot_code(self, question_id, img, llm):
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url", 
+                        "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
+                    },
+                    {
+                        "type": "text",
+                        "text": "Analyze this image and write a complete Python script using the matplotlib library to recreate it visually. Break the image down into basic shapes, lines, and colors. Output ONLY valid, executable Python code. Do not include any markdown formatting, explanations, or conversational text."
+                    }
+                ]
+            }
+        ]
 
         try:
-            response = llm.generate([[message]], n=1)
-            generation = response.generations[0] 
+            response = llm.chat.completions.create(
+                model="qwen3.5",
+                messages=messages,
+                max_tokens=2048, 
+                temperature=0.7,
+                n=1,
+                top_p=0.80,
+                presence_penalty=1.5,
+                extra_body={
+                    "top_k": 20,
+                    "min_p": 0.0,
+                    "repetition_penalty": 1.0,
+                }
+            )
+            if response.choices[0].message.content is not None:
+                generation_text = response.choices[0].message.content
+            elif hasattr(response.choices[0].message, 'reasoning') and (response.choices[0].message.reasoning is not None):
+                generation_text = response.choices[0].message.reasoning
+            else:
+                generation_text = ""
+        
         except Exception as e:
             print(f"\nPlot Generation failed for ID {question_id}: {e}")
-            generation = ""
+            generation_text = ""
         
-        return generation
+        return generation_text
 
 
 class AkibMethod:
     def __call__(self, question_id, question, answer_type, subject, img, llm):
-        pass
+        raise NotImplementedError("AkibMethod is not yet implemented.")
 
 
 class VasudevMethod:

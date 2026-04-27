@@ -16,7 +16,10 @@ def transfer(value_str):
     """Handle pi symbols and convert strings to floats."""
     if "\u03c0" in value_str:
         parts = value_str.split('\u03c0')
-        multiplier = parts[0] if parts[0] else '1'
+        if parts[0] == '-':
+            multiplier = '-1'
+        else:
+            multiplier = parts[0] if parts[0] else '1'
         return float(multiplier) * np.pi
     return float(value_str)
 
@@ -24,11 +27,8 @@ def transfer(value_str):
 def parse_answer(answer, answer_type="multiple choice"):
     """Parse raw answer strings based on expected type."""
     if answer_type == "float":
-        if str(answer).isdigit():
-            return True, float(answer)
-        
         try:
-            parts = str(answer).split(' ')
+            parts = str(answer).strip().split(' ')
             parsed_val = transfer(parts[0])
             return True, parsed_val
         except Exception:
@@ -65,7 +65,7 @@ def evaluate_prediction(pred_text, ground_truth, answer_type):
     if answer_type == 'float':
         if succeed and short_answer is not None:
             try:
-                diff = float(short_answer) - float(ground_truth)
+                diff = float(short_answer) - transfer(str(ground_truth))
                 return abs(diff) <= 0.001
             except Exception:
                 return False

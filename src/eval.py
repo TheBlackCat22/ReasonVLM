@@ -3,7 +3,7 @@ import datasets
 import argparse
 import pandas as pd
 from tqdm import tqdm
-from langchain_openai import ChatOpenAI
+from openai import OpenAI
 
 from methods import (
     BaselineMethod,
@@ -25,20 +25,9 @@ def main(method_name):
 
 
     print("\n\nLLM")
-    llm = ChatOpenAI(
-        model="qwen3.5",
+    llm = OpenAI(
         base_url="http://127.0.0.1:8000/v1",
-        api_key="dummy",
-        max_tokens=2048, 
-        temperature=0.7,
-        n=4,
-        top_p=0.80,
-        presence_penalty=1.5,
-        extra_body={
-            "top_k": 20,
-            "min_p": 0.0,
-            "repetition_penalty": 1.0
-        }
+        api_key="dummy"
     )
     print(llm)
 
@@ -68,19 +57,38 @@ def main(method_name):
         subject = row['subject']
         img = row['decoded_image']
 
-        message = method(question_id, question, answer_type, subject, img, llm)
+        messages = method(question_id, question, answer_type, subject, img, llm)
 
         try:
-            response = llm.generate([[message]])
-            
+            response = llm.chat.completions.create(
+                model="qwen3.5",
+                messages=messages,
+                max_tokens=2048, 
+                temperature=0.7,
+                n=4,
+                top_p=0.80,
+                presence_penalty=1.5,
+                extra_body={
+                    "top_k": 20,
+                    "min_p": 0.0,
+                    "repetition_penalty": 1.0
+                }
+                response_format={"type": "json_object"}
+            )
             sample_correctness = []
-            for generation in response.generations[0]:
-                is_correct = evaluate_prediction(generation.text, ground_truth, answer_type)
+            for choice in response.choices:
+                if choice.message.content is not None:
+                    generation_text = choice.message.content
+                elif hasattr(choice.message, 'reasoning') and (choice.message.reasoning is not None):
+                    generation_text = choice.message.reasoning
+                else:
+                    generation_text = ""
+                is_correct = evaluate_prediction(generation_text, ground_truth, answer_type)
                 sample_correctness.append(is_correct)
         
         except Exception as e:
             print(f"\nInference failed for ID {question_id}: {e}")
-            sample_correctness = [False]
+            sample_correctness = [False] * 4
         
         results.append({
             'id': question_id,
