@@ -31,7 +31,7 @@ def run_dsg_loop(img, original_question, llm, encode_fn):
             {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{encode_fn(img)}"}}
         ])
         # Use simple invoke for grounding steps
-        res = llm.invoke([msg])
+        res = llm.invoke([msg], n=1)
         ans = res.content.strip()
         context += f"{concept} is {ans}, "
     
