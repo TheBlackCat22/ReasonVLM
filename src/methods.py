@@ -2,6 +2,7 @@ import os
 import base64
 import pandas as pd
 from io import BytesIO
+from langchain_core.messages import HumanMessage
 
 from viser_utils import apply_viser_scaffolding, get_viser_prompt
 from scaffold_utils import apply_scaffold_coordinates, get_scaffold_prompt
@@ -39,22 +40,19 @@ def get_instruction_suffix(answer_type):
 class BaselineMethod:
     def __call__(self, question_id, question, answer_type, subject, img, llm):
         inst = get_instruction_suffix(answer_type)
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url", 
-                        "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
-                    },
-                    {
-                        "type": "text", 
-                        "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst)
-                    }
-                ]
-            }
-        ]
-        return messages
+        message = HumanMessage(
+            content=[
+                {
+                    "type": "text", 
+                    "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst)
+                },
+                {
+                    "type": "image_url", 
+                    "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
+                }
+            ]
+        )
+        return message
 
 
 class SushilOracleMethod:
@@ -67,22 +65,19 @@ class SushilOracleMethod:
         plot_code = self.oracle_data.loc[self.oracle_data['question_id'] == int(question_id), 'plot_function'].values[0]
         plot_code_prompt = f"\n## Plot Code \nHere is the python code used to generate the image. \n```python\n{plot_code}\n```"
 
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url", 
-                        "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
-                    },
-                    {
-                        "type": "text", 
-                        "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst) + plot_code_prompt
-                    }
-                ]
-            }
-        ]
-        return messages
+        message = HumanMessage(
+            content=[
+                {
+                    "type": "text", 
+                    "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst) + plot_code_prompt
+                },
+                {
+                    "type": "image_url", 
+                    "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
+                }
+            ]
+        )
+        return message
 
 
 class SushilMethod:
@@ -90,70 +85,45 @@ class SushilMethod:
         inst = get_instruction_suffix(answer_type)
 
         plot_code = self.generate_plot_code(question_id, img, llm)
-        if plot_code != "":
+        if plot_code:
             plot_code_prompt = f"\n## Plot Code \nHere is the python code used to generate the image. \n```python\n{plot_code}\n```"
         else:
             plot_code_prompt = ""
 
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url", 
-                        "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
-                    },
-                    {
-                        "type": "text", 
-                        "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst) + plot_code_prompt
-                    }
-                ]
-            }
-        ]
-        return messages    
+        message = HumanMessage(
+            content=[
+                {
+                    "type": "text", 
+                    "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst) + plot_code_prompt
+                },
+                {
+                    "type": "image_url", 
+                    "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
+                }
+            ]
+        )
+        return message    
 
     def generate_plot_code(self, question_id, img, llm):
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url", 
-                        "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
-                    },
-                    {
-                        "type": "text",
-                        "text": "Analyze this image and write a complete Python script using the matplotlib library to recreate it visually. Break the image down into basic shapes, lines, and colors. Output ONLY valid, executable Python code. Do not include any markdown formatting, explanations, or conversational text."
-                    }
-                ]
-            }
-        ]
+        message = HumanMessage(
+            content =[
+                {
+                    "type": "text",
+                    "text": "Analyze this image and write a complete Python script using the matplotlib library to recreate it visually. Break the image down into basic shapes, lines, and colors. Output ONLY valid, executable Python code. Do not include any markdown formatting, explanations, or conversational text."
+                },
+                {
+                    "type": "image_url", 
+                    "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
+                }
+            ]
+        )
 
         try:
-            response = llm.chat.completions.create(
-                model="qwen3.5",
-                messages=messages,
-                max_tokens=2048, 
-                temperature=0.7,
-                n=1,
-                top_p=0.80,
-                presence_penalty=1.5,
-                extra_body={
-                    "top_k": 20,
-                    "min_p": 0.0,
-                    "repetition_penalty": 1.0,
-                }
-            )
-            if response.choices[0].message.content is not None:
-                generation_text = response.choices[0].message.content
-            elif hasattr(response.choices[0].message, 'reasoning') and (response.choices[0].message.reasoning is not None):
-                generation_text = response.choices[0].message.reasoning
-            else:
-                generation_text = ""
-        
+            response = llm.generate([[message]], n=1)
+            generation_text = response.generations[0][0].text 
         except Exception as e:
             print(f"\nPlot Generation failed for ID {question_id}: {e}")
-            generation_text = ""
+            generation_text = None
         
         return generation_text
 

@@ -27,7 +27,6 @@ vllm serve "$MODEL_ID" \
     --host 0.0.0.0 \
     --port 8000 \
     --tensor-parallel-size 2 \
-    --max-model-len 8192 \
-    --reasoning-parser qwen3 &
+    --max-model-len 8192 &
 
 wait
