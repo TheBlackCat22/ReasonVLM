@@ -1,7 +1,9 @@
+import os
 import base64
 import pandas as pd
 from io import BytesIO
 from langchain_core.messages import HumanMessage
+
 from viser_utils import apply_viser_scaffolding, get_viser_prompt
 from scaffold_utils import apply_scaffold_coordinates, get_scaffold_prompt
 from dsg_utils_vasu import run_dsg_loop
@@ -65,7 +67,7 @@ class SushilOracleMethod:
             inst = "Float numbers in the answer should be formatted as three-digit floating-point numbers."
 
         plot_code = self.oracle_data.loc[self.oracle_data['question_id'] == int(question_id), 'plot_function'].values[0]
-        plot_code_prompt = f"\n## Plot Code \n```python\n{plot_code}\n```"
+        plot_code_prompt = f"\n## Plot Code \nHere is the python code used to generate the image. \n```python\n{plot_code}\n```"
 
         message = HumanMessage(
             content=[
@@ -84,7 +86,55 @@ class SushilOracleMethod:
 
 class SushilMethod:
     def __call__(self, question_id, question, answer_type, subject, img, llm):
-        pass
+        if answer_type == 'multiple choice':
+            inst = "Provide the corresponding choice option in the 'short answer' key, such as 'A', 'B', 'C', or 'D'."
+        elif answer_type == 'float':
+            inst = "Format the answer as a three-digit floating-point number and provide it in the 'short answer' key."
+        else:
+            inst = "Float numbers in the answer should be formatted as three-digit floating-point numbers."
+
+        plot_code = self.generate_plot_code(question_id, img)
+        if plot_code != "":
+            plot_code_prompt = f"\n## Plot Code \nHere is the python code used to generate the image. \n```python\n{plot_code}\n```"
+        else:
+            plot_code_prompt = ""
+
+        message = HumanMessage(
+            content=[
+                {
+                    "type": "text", 
+                    "text": f"## Question\n {question}\n" + GUIDE.format(INST=inst) + plot_code_prompt
+                },
+                {
+                    "type": "image_url", 
+                    "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
+                }
+            ]
+        )
+        return message    
+
+    def generate_plot_code(self, question_id, img):
+        message = HumanMessage(
+            content =[
+                {
+                    "type": "text",
+                    "text": "Analyze this image and write a complete Python script using the matplotlib library to recreate it visually. Break the image down into basic shapes, lines, and colors. Output ONLY valid, executable Python code. Do not include any markdown formatting, explanations, or conversational text."
+                },
+                {
+                    "type": "image_url", 
+                    "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}
+                }
+            ]
+        )
+
+        try:
+            response = llm.generate([[message]], n=1)
+            generation = response.generations[0] 
+        except Exception as e:
+            print(f"\nPlot Generation failed for ID {question_id}: {e}")
+            generation = ""
+        
+        return generation
 
 
 class AkibMethod:
@@ -98,7 +148,6 @@ class VasudevMethod:
     Mode toggled via environment variable 'VASUDEV_MODE' (options: 'dsg', 'viser', 'scaffold').
     """
     def __init__(self, sub_method=None):
-        import os
         # Default to dsg for now
         self.sub_method = sub_method or os.getenv("VASUDEV_MODE", "dsg")
 
