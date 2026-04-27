@@ -126,7 +126,8 @@ class SushilMethod:
                     "top_k": 20,
                     "min_p": 0.0,
                     "repetition_penalty": 1.0
-                }
+                },
+                "chat_template_kwargs": {"enable_thinking": False}
             )
             generation_text = response.generations[0][0].text 
         except Exception as e:

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=vllm-serve-qwen4b
-#SBATCH --time=03:00:00
+#SBATCH --time=05:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16
@@ -27,6 +27,7 @@ vllm serve "$MODEL_ID" \
     --host 0.0.0.0 \
     --port 8000 \
     --tensor-parallel-size 2 \
-    --max-model-len 8192 &
+    --max-model-len 8192 \
+    --reasoning-parser qwen3 &
 
 wait

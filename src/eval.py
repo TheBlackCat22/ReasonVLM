@@ -47,7 +47,8 @@ def main(method_name):
                 },
                 "required": ["solution", "short answer"],
                 "additionalProperties": False
-            }
+            },
+            "chat_template_kwargs": {"enable_thinking": False}
         }
     )
     print(llm)
