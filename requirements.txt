@@ -271,3 +271,13 @@ xxhash==3.6.0
 yarl==1.23.0
 zipp==3.23.1
 zstandard==0.25.0
+
+# ── AkibMethod dependencies ────────────────────────────────────────────────
+# CV skeleton pipeline
+scikit-image
+
+# Option A: multi-OCR ensemble
+pytesseract          # Python wrapper — also requires system package: apt-get install tesseract-ocr
+easyocr
+paddleocr
+paddlepaddle-gpu         # GPU build; use paddlepaddle for CPU
