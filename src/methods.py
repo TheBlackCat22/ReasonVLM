@@ -2,6 +2,9 @@ import base64
 import pandas as pd
 from io import BytesIO
 from langchain_core.messages import HumanMessage
+from viser_utils import apply_viser_scaffolding, get_viser_prompt
+from scaffold_utils import apply_scaffold_coordinates, get_scaffold_prompt
+from dsg_utils_vasu import run_dsg_loop
 
 
 def encode_image(img):
@@ -90,5 +93,51 @@ class AkibMethod:
 
 
 class VasudevMethod:
+    """
+    Orchestrates DSG, VISER, and SCAFFOLD methods.
+    Mode toggled via environment variable 'VASUDEV_MODE' (options: 'dsg', 'viser', 'scaffold').
+    """
+    def __init__(self, sub_method=None):
+        import os
+        # Default to dsg for now
+        self.sub_method = sub_method or os.getenv("VASUDEV_MODE", "dsg")
+
     def __call__(self, question_id, question, answer_type, subject, img, llm):
-        pass
+        # 1. Determine instruction suffix (standard DynaMath format)
+        if answer_type == 'multiple choice':
+            inst = "Provide the corresponding choice option in the 'short answer' key, such as 'A', 'B', 'C', or 'D'."
+        elif answer_type == 'float':
+            inst = "Format the answer as a three-digit floating-point number and provide it in the 'short answer' key."
+        else:
+            inst = "Float numbers in the answer should be formatted as three-digit floating-point numbers."
+
+        processed_img = img.copy()
+        processed_question = question
+
+        # 2. Apply the selected logic
+        if self.sub_method == "viser":
+            processed_img = apply_viser_scaffolding(processed_img)
+            processed_question = get_viser_prompt(question)
+        
+        elif self.sub_method == "scaffold":
+            processed_img = apply_scaffold_coordinates(processed_img)
+            processed_question = get_scaffold_prompt(question)
+            
+        elif self.sub_method == "dsg":
+            # Multi-turn DSG grounding loop
+            processed_question = run_dsg_loop(img, question, llm, encode_image)
+
+        # 3. Build and return the multimodal message
+        message = HumanMessage(
+            content=[
+                {
+                    "type": "text", 
+                    "text": f"## Question\n {processed_question}\n" + GUIDE.format(INST=inst)
+                },
+                {
+                    "type": "image_url", 
+                    "image_url": {"url": f"data:image/png;base64,{encode_image(processed_img)}"}
+                }
+            ]
+        )
+        return message
