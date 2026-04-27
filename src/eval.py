@@ -72,7 +72,7 @@ def main(method_name):
                     "top_k": 20,
                     "min_p": 0.0,
                     "repetition_penalty": 1.0
-                }
+                },
                 response_format={"type": "json_object"}
             )
             sample_correctness = []
@@ -101,11 +101,13 @@ def main(method_name):
 
     print("\n\nResults")
     df_results = pd.DataFrame(results)
-    print(f"Overall: Pass@1 = {df_results['pass@1'].mean():.2%} | Pass@4 = {df_results['pass@4'].mean():.2%} | Avg@4 = {df_results['avg@4'].mean():.2%}")
+    
+    sub = "Overall"
+    print(f"{sub:20}: Pass@1 = {df_results['pass@1'].mean():.2%} | Pass@4 = {df_results['pass@4'].mean():.2%} | Avg@4 = {df_results['avg@4'].mean():.2%}")
 
     subject_metrics = df_results.groupby('subject')[['pass@1', 'pass@4', 'avg@4']].mean()
     for sub, res in subject_metrics.iterrows():
-        print(f"{sub:15}: Pass@1 = {res['pass@1']:.2%} | Pass@4 = {res['pass@4']:.2%} | Avg@4 = {res['avg@4']:.2%}")
+        print(f"{sub:20}: Pass@1 = {res['pass@1']:.2%} | Pass@4 = {res['pass@4']:.2%} | Avg@4 = {res['avg@4']:.2%}")
 
 
 if __name__ == "__main__":
