@@ -81,6 +81,16 @@ statistics        : Pass@1 = 52.80% | Pass@4 = 70.40% | Avg@4 = 42.80%
 ```
 ### Vasudev - DSG
 ```
+Overall           : Pass@1 = 37.52% | Pass@4 = 61.48% | Avg@4 = 37.92%
+algebra           : Pass@1 = 31.37% | Pass@4 = 70.59% | Avg@4 = 37.25%
+analytic geometry : Pass@1 = 40.21% | Pass@4 = 62.89% | Avg@4 = 38.92%
+arithmetic        : Pass@1 = 15.38% | Pass@4 = 30.77% | Avg@4 = 14.42%
+graph theory      : Pass@1 = 31.25% | Pass@4 = 56.25% | Avg@4 = 33.33%
+plane geometry    : Pass@1 = 25.97% | Pass@4 = 50.65% | Avg@4 = 30.84%
+puzzle test       : Pass@1 = 23.53% | Pass@4 = 29.41% | Avg@4 = 14.71%
+scientific figure : Pass@1 = 42.22% | Pass@4 = 64.44% | Avg@4 = 37.78%
+solid geometry    : Pass@1 = 20.00% | Pass@4 = 33.33% | Avg@4 = 18.33%
+statistics        : Pass@1 = 54.40% | Pass@4 = 78.40% | Avg@4 = 54.00%
 ```
 
 ---
