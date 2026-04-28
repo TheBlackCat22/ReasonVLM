@@ -3,6 +3,16 @@
 ## Qwen3.5-0.8B
 #### Baseline
 ```
+Overall             : Pass@1 = 47.70% | Pass@4 = 65.27% | Avg@4 = 44.66%
+algebra             : Pass@1 = 41.18% | Pass@4 = 64.71% | Avg@4 = 39.71%
+analytic geometry   : Pass@1 = 41.24% | Pass@4 = 59.79% | Avg@4 = 38.14%
+arithmetic          : Pass@1 = 42.31% | Pass@4 = 42.31% | Avg@4 = 34.62%
+graph theory        : Pass@1 = 31.25% | Pass@4 = 52.08% | Avg@4 = 33.33%
+plane geometry      : Pass@1 = 45.45% | Pass@4 = 62.34% | Avg@4 = 41.88%
+puzzle test         : Pass@1 = 23.53% | Pass@4 = 58.82% | Avg@4 = 27.94%
+scientific figure   : Pass@1 = 51.11% | Pass@4 = 68.89% | Avg@4 = 45.00%
+solid geometry      : Pass@1 = 26.67% | Pass@4 = 46.67% | Avg@4 = 21.67%
+statistics          : Pass@1 = 68.80% | Pass@4 = 83.20% | Avg@4 = 64.80%
 ```
 #### Sushil Oracle
 ```
@@ -32,6 +42,16 @@ statistics          : Pass@1 = 59.20% | Pass@4 = 76.00% | Avg@4 = 56.20%
 ```
 #### Akib
 ```
+Overall             : Pass@1 = 46.31% | Pass@4 = 66.47% | Avg@4 = 43.41%
+algebra             : Pass@1 = 35.29% | Pass@4 = 60.78% | Avg@4 = 30.88%
+analytic geometry   : Pass@1 = 41.24% | Pass@4 = 62.89% | Avg@4 = 39.18%
+arithmetic          : Pass@1 = 30.77% | Pass@4 = 50.00% | Avg@4 = 28.85%
+graph theory        : Pass@1 = 41.67% | Pass@4 = 64.58% | Avg@4 = 39.06%
+plane geometry      : Pass@1 = 49.35% | Pass@4 = 64.94% | Avg@4 = 46.43%
+puzzle test         : Pass@1 = 17.65% | Pass@4 = 52.94% | Avg@4 = 22.06%
+scientific figure   : Pass@1 = 37.78% | Pass@4 = 68.89% | Avg@4 = 42.78%
+solid geometry      : Pass@1 = 33.33% | Pass@4 = 40.00% | Avg@4 = 31.67%
+statistics          : Pass@1 = 66.40% | Pass@4 = 80.80% | Avg@4 = 59.20%
 ```
 #### Vaudev
 ```
@@ -71,6 +91,16 @@ statistics          : Pass@1 = 63.20% | Pass@4 = 77.60% | Avg@4 = 63.40%
 ```
 #### Akib
 ```
+Overall             : Pass@1 = 44.11% | Pass@4 = 66.27% | Avg@4 = 42.71%
+algebra             : Pass@1 = 45.10% | Pass@4 = 70.59% | Avg@4 = 46.57%
+analytic geometry   : Pass@1 = 38.14% | Pass@4 = 58.76% | Avg@4 = 37.89%
+arithmetic          : Pass@1 = 26.92% | Pass@4 = 42.31% | Avg@4 = 24.04%
+graph theory        : Pass@1 = 35.42% | Pass@4 = 66.67% | Avg@4 = 36.46%
+plane geometry      : Pass@1 = 44.16% | Pass@4 = 66.23% | Avg@4 = 38.96%
+puzzle test         : Pass@1 = 17.65% | Pass@4 = 35.29% | Avg@4 = 19.12%
+scientific figure   : Pass@1 = 37.78% | Pass@4 = 64.44% | Avg@4 = 39.44%
+solid geometry      : Pass@1 = 20.00% | Pass@4 = 40.00% | Avg@4 = 23.33%
+statistics          : Pass@1 = 64.00% | Pass@4 = 83.20% | Avg@4 = 60.20%
 ```
 #### Vaudev
 ```
