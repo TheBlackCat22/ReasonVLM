@@ -6,11 +6,8 @@ import numpy as np
 import pandas as pd
 from io import BytesIO
 from collections import Counter
+from PIL import Image, ImageDraw, ImageFont
 from langchain_core.messages import HumanMessage
-
-from viser_utils import apply_viser_scaffolding, get_viser_prompt
-from scaffold_utils import apply_scaffold_coordinates, get_scaffold_prompt
-from dsg_utils_vasu import run_dsg_loop
 
 
 def encode_image(img):
@@ -796,6 +793,16 @@ class VasudevMethod:
     Orchestrates DSG, VISER, and SCAFFOLD methods.
     Mode toggled via environment variable 'VASUDEV_MODE' (options: 'dsg', 'viser', 'scaffold').
     """
+
+    GENERIC_GRAPH_PROGRAM = """
+    p(image | concept=math-graph) =
+      p(axes-limits-and-labels | concept=math-graph)
+      p(origin-location-and-grid-increments | concept=math-graph, axes-limits-and-labels)
+      p(curve-type-and-qualitative-shape | concept=math-graph, origin-location-and-grid-increments)
+      p(precise-coordinates-of-intercepts-and-extrema | concept=math-graph, curve-type-and-qualitative-shape)
+      p(image | axes-limits-and-labels, origin-location-and-grid-increments, curve-type-and-qualitative-shape, precise-coordinates-of-intercepts-and-extrema)
+    """
+
     def __init__(self, sub_method=None):
         # Default to dsg for now
         self.sub_method = sub_method or os.getenv("VASUDEV_MODE", "dsg")
@@ -814,16 +821,16 @@ class VasudevMethod:
 
         # 2. Apply the selected logic
         if self.sub_method == "viser":
-            processed_img = apply_viser_scaffolding(processed_img)
-            processed_question = get_viser_prompt(question)
+            processed_img = self._apply_viser_scaffolding(processed_img)
+            processed_question = self._get_viser_prompt(question)
         
         elif self.sub_method == "scaffold":
-            processed_img = apply_scaffold_coordinates(processed_img)
-            processed_question = get_scaffold_prompt(question)
+            processed_img = self._apply_scaffold_coordinates(processed_img)
+            processed_question = self._get_scaffold_prompt(question)
             
         elif self.sub_method == "dsg":
             # Multi-turn DSG grounding loop
-            processed_question = run_dsg_loop(img, question, llm, encode_image)
+            processed_question = self._run_dsg_loop(img, question, llm)
 
         # 3. Build and return the multimodal message
         message = HumanMessage(
@@ -839,3 +846,73 @@ class VasudevMethod:
             ]
         )
         return message
+
+    def _apply_viser_scaffolding(self, img, num_lines=3):
+        """Draws equidistant horizontal lines on the image."""
+        draw = ImageDraw.Draw(img)
+        width, height = img.size
+        for i in range(1, num_lines + 1):
+            y = int(i * height / (num_lines + 1))
+            draw.line([(0, y), (width, y)], fill="red", width=2)
+        return img
+
+    def _get_viser_prompt(self, prompt):
+        """Wraps prompt with VISER sequential scanning instructions."""
+        instruction = "The image is divided by horizontal lines. Please scan the image sequentially from top to bottom, anchoring your reasoning to these lines. "
+        return instruction + prompt
+
+    def _apply_scaffold_coordinates(self, img, grid_size=(10, 10), dot_color=(255, 0, 0), text_color=(255, 0, 0)):
+        """Applies centered coordinate scaffolding (-50 to 50)."""
+        draw = ImageDraw.Draw(img)
+        width, height = img.size
+        cols, rows = grid_size
+        x_spacing, y_spacing = width / (cols + 1), height / (rows + 1)
+
+        try:
+            font_size = max(10, int(min(width, height) / 50))
+            font = ImageFont.truetype("arial.ttf", font_size)
+        except:
+            font = ImageFont.load_default()
+
+        for r in range(1, rows + 1):
+            for c in range(1, cols + 1):
+                x, y = int(c * x_spacing), int(r * y_spacing)
+                draw.ellipse([x-2, y-2, x+2, y+2], fill=dot_color)
+                # Reverted to top-left origin (0 to 100)
+                norm_x = int((c / (cols + 1)) * 100)
+                norm_y = int((r / (rows + 1)) * 100)
+                draw.text((x + 5, y + 5), f"({norm_x},{norm_y})", fill=text_color, font=font)
+        return img
+
+    def _get_scaffold_prompt(self, prompt):
+        """Wraps prompt with SCAFFOLD instructions."""
+        instruction = "The image has a coordinate dot matrix centered at (0,0). Use these coordinates for visual grounding. "
+        return instruction + prompt
+
+    def _parse_program(self, program):
+        lines = [line.strip() for line in program.strip().split('\n') if '=' not in line and '|' in line]
+        concepts = []
+        for line in lines:
+            match = re.search(r'p\((.*?) \|', line)
+            if match:
+                concepts.append(match.group(1).replace('-', ' '))
+        return concepts
+
+    def _run_dsg_loop(self, img, original_question, llm):
+        """Runs the multi-turn grounding loop using the provided LangChain LLM."""
+        concepts = self._parse_program(self.GENERIC_GRAPH_PROGRAM)
+        context = ""
+        
+        for concept in concepts:
+            prompt = f"Imagine that the image represents math-graph and the context is {context if context else 'nothing yet'}, what is the {concept}? Answer with one word or phrase only."
+            msg = HumanMessage(content=[
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{encode_image(img)}"}}
+            ])
+            # Use simple invoke for grounding steps
+            res = llm.invoke([msg], n=1)
+            ans = res.content.strip()
+            context += f"{concept} is {ans}, "
+        
+        final_prompt = f"Using the following grounded context: {context}\nSolve this question: {original_question}"
+        return final_prompt
