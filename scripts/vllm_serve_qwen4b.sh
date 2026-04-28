@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=vllm-serve-qwen4b
-#SBATCH --time=05:00:00
+#SBATCH --time=07:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16
@@ -29,5 +29,22 @@ vllm serve "$MODEL_ID" \
     --tensor-parallel-size 2 \
     --max-model-len 8192 \
     --reasoning-parser qwen3 &
+VLLM_PID=$!
 
-wait
+export NO_PROXY='localhost,127.0.0.1,0.0.0.0'
+while true; do
+    STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/health)
+    if [ "$STATUS" -eq 200 ]; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') vLLM server is online!"
+        break
+    fi
+    if ! kill -0 $VLLM_PID 2>/dev/null; then
+        echo "ERROR: vLLM server process died unexpectedly! Exiting job..."
+        exit 1
+    fi
+    sleep 10
+done
+
+python src/eval.py --method=$1
+
+exit 0

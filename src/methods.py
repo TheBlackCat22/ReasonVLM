@@ -137,7 +137,7 @@ class SushilMethod:
         
         return generation_text
 
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
 class AkibMethod:
     """
     Dual-path CV augmentation pipeline.
@@ -784,9 +784,6 @@ class AkibMethod:
             ]
         )
 
-
-
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 class VasudevMethod:
     """
