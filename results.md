@@ -206,9 +206,29 @@ statistics          : Pass@1 = 71.20% | Pass@4 = 83.20% | Avg@4 = 71.00%
 ```
 #### Sushil Oracle
 ```
+Overall             : Pass@1 = 56.89% | Pass@4 = 68.66% | Avg@4 = 53.14%
+algebra             : Pass@1 = 49.02% | Pass@4 = 54.90% | Avg@4 = 43.63%
+analytic geometry   : Pass@1 = 47.42% | Pass@4 = 62.89% | Avg@4 = 45.10%
+arithmetic          : Pass@1 = 61.54% | Pass@4 = 76.92% | Avg@4 = 55.77%
+graph theory        : Pass@1 = 58.33% | Pass@4 = 75.00% | Avg@4 = 58.85%
+plane geometry      : Pass@1 = 48.05% | Pass@4 = 62.34% | Avg@4 = 41.23%
+puzzle test         : Pass@1 = 70.59% | Pass@4 = 82.35% | Avg@4 = 61.76%
+scientific figure   : Pass@1 = 42.22% | Pass@4 = 57.78% | Avg@4 = 40.56%
+solid geometry      : Pass@1 = 33.33% | Pass@4 = 33.33% | Avg@4 = 28.33%
+statistics          : Pass@1 = 77.60% | Pass@4 = 84.80% | Avg@4 = 74.20%
 ```
 #### Sushil
 ```
+Overall             : Pass@1 = 61.48% | Pass@4 = 71.86% | Avg@4 = 56.24%
+algebra             : Pass@1 = 60.78% | Pass@4 = 72.55% | Avg@4 = 54.41%
+analytic geometry   : Pass@1 = 46.39% | Pass@4 = 56.70% | Avg@4 = 41.75%
+arithmetic          : Pass@1 = 69.23% | Pass@4 = 76.92% | Avg@4 = 64.42%
+graph theory        : Pass@1 = 68.75% | Pass@4 = 77.08% | Avg@4 = 63.02%
+plane geometry      : Pass@1 = 50.65% | Pass@4 = 64.94% | Avg@4 = 44.16%
+puzzle test         : Pass@1 = 76.47% | Pass@4 = 82.35% | Avg@4 = 64.71%
+scientific figure   : Pass@1 = 62.22% | Pass@4 = 75.56% | Avg@4 = 51.67%
+solid geometry      : Pass@1 = 26.67% | Pass@4 = 46.67% | Avg@4 = 35.00%
+statistics          : Pass@1 = 77.60% | Pass@4 = 84.80% | Avg@4 = 74.40%
 ```
 #### Akib
 ```
