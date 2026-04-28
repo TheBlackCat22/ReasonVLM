@@ -130,6 +130,16 @@ statistics          : Pass@1 = 71.20% | Pass@4 = 83.20% | Avg@4 = 71.00%
 ```
 #### Akib
 ```
+Overall             : Pass@1 = 52.69% | Pass@4 = 68.86% | Avg@4 = 50.95%
+algebra             : Pass@1 = 49.02% | Pass@4 = 66.67% | Avg@4 = 46.57%
+analytic geometry   : Pass@1 = 46.39% | Pass@4 = 60.82% | Avg@4 = 45.36%
+arithmetic          : Pass@1 = 53.85% | Pass@4 = 57.69% | Avg@4 = 49.04%
+graph theory        : Pass@1 = 58.33% | Pass@4 = 72.92% | Avg@4 = 53.65%
+plane geometry      : Pass@1 = 44.16% | Pass@4 = 62.34% | Avg@4 = 38.64%
+puzzle test         : Pass@1 = 52.94% | Pass@4 = 76.47% | Avg@4 = 51.47%
+scientific figure   : Pass@1 = 37.78% | Pass@4 = 62.22% | Avg@4 = 38.89%
+solid geometry      : Pass@1 = 20.00% | Pass@4 = 40.00% | Avg@4 = 28.33%
+statistics          : Pass@1 = 71.20% | Pass@4 = 85.60% | Avg@4 = 71.00%
 ```
 #### Vaudev
 ```
